@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    >
+
+    <title>Burger House</title>
+
+    <!-- Telegram Web App китепканасы -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Three.js китепканасы -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+    <!-- 3D модель жүктөөчү GLTFLoader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            background:
+                radial-gradient(circle at top, #5d210d, #1c0804 70%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 18px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            color: #ffd4aa;
+        }
+
+        #scene {
+            width: 100%;
+            height: 330px;
+            overflow: hidden;
+            border-radius: 24px;
+            background:
+                linear-gradient(145deg, #f58220, #8b250d);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        #scene canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            color: #ffe2c3;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 75px;
+            resize: vertical;
+        }
+
+        .product {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .product-info strong {
+            display: block;
+            font-size: 17px;
+        }
+
+        .product-info span {
+            color: #ffd4aa;
+            font-size: 14px;
+        }
+
+        .quantity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quantity button {
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            color: #ffffff;
+            background: #ef6c13;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .quantity strong {
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #orderButton {
+            width: 100%;
+            margin-top: 18px;
+            padding: 15px;
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            background: #21a366;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #orderButton:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <header class="header">
+            <h1>🍔 Burger House</h1>
+            <p>Даамдуу бургерлер биздин Web App'те</p>
+        </header>
+
+        <section id="scene"></section>
+
+        <section class="card">
+            <h2>🛒 Менин заказым</h2>
+
+            <div class="product">
+                <div class="product-info">
+                    <strong>Чизбургер</strong>
+                    <span>250 сом</span>
+                </div>
+
+                <div class="quantity">
+                    <button onclick="changeQuantity('burger', -1)">−</button>
+                    <strong id="burgerQuantity">0</strong>
+                    <button onclick="changeQuantity('burger', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="product">
+                <div class="product-info">
+                    <strong>Картошка фри</strong>
+                    <span>120 сом</span>
+                </div>
+
+                <div class="quantity">
+                    <button onclick="changeQuantity('fries', -1)">−</button>
+                    <strong id="friesQuantity">0</strong>
+                    <button onclick="changeQuantity('fries', 1)">+</button>
+                </div>
+            </div>
+
+            <label for="customerName">Атыңыз</label>
+            <input
+                id="customerName"
+                type="text"
+                placeholder="Мисалы: Азамат"
+            >
+
+            <label for="phone">Телефон номериңиз</label>
+            <input
+                id="phone"
+                type="tel"
+                placeholder="+996700123456"
+            >
+
+            <label for="address">Дарегиңиз</label>
+            <input
+                id="address"
+                type="text"
+                placeholder="Бишкек, Чүй көчөсү 10"
+            >
+
+            <label for="comment">Комментарий</label>
+            <textarea
+                id="comment"
+                placeholder="Мисалы: пияз кошпоңуз"
+            ></textarea>
+
+            <div class="total">
+                <span>Жалпы сумма:</span>
+                <span><span id="total">0</span> сом</span>
+            </div>
+
+            <button id="orderButton" onclick="sendOrder()">
+                ✅ Заказ берүү
+            </button>
+        </section>
+    </main>
+
+    <script>
+        // Telegram Web App объектисин алабыз
+        const telegramApp = window.Telegram.WebApp;
+
+        telegramApp.ready();
+        telegramApp.expand();
+
+        // Товарлар
+        const products = {
+            burger: {
+                name: "Чизбургер",
+                price: 250,
+                quantity: 0
+            },
+            fries: {
+                name: "Картошка фри",
+                price: 120,
+                quantity: 0
+            }
+        };
+
+        // Товардын санын өзгөртүү
+        function changeQuantity(productKey, amount) {
+            const product = products[productKey];
+
+            product.quantity += amount;
+
+            if (product.quantity < 0) {
+                product.quantity = 0;
+            }
+
+            document.getElementById(
+                productKey + "Quantity"
+            ).textContent = product.quantity;
+
+            calculateTotal();
+        }
+
+        // Жалпы бааны эсептөө
+        function calculateTotal() {
+            const total =
+                products.burger.price * products.burger.quantity +
+                products.fries.price * products.fries.quantity;
+
+            document.getElementById("total").textContent = total;
+
+            return total;
+        }
+
+        // Заказды ботко жөнөтүү
+        function sendOrder() {
+            const customerName =
+                document.getElementById("customerName").value.trim();
+
+            const phone =
+                document.getElementById("phone").value.trim();
+
+            const address =
+                document.getElementById("address").value.trim();
+
+            const comment =
+                document.getElementById("comment").value.trim();
+
+            const total = calculateTotal();
+
+            if (products.burger.quantity === 0 &&
+                products.fries.quantity === 0) {
+                telegramApp.showAlert(
+                    "Сураныч, жок дегенде бир товар тандаңыз."
+                );
+                return;
+            }
+
+            if (!customerName || !phone || !address) {
+                telegramApp.showAlert(
+                    "Атыңызды, телефонуңузду жана дарегиңизди жазыңыз."
+                );
+                return;
+            }
+
+            const items = [];
+
+            if (products.burger.quantity > 0) {
+                items.push({
+                    name: products.burger.name,
+                    quantity: products.burger.quantity,
+                    price: products.burger.price
+                });
+            }
+
+            if (products.fries.quantity > 0) {
+                items.push({
+                    name: products.fries.name,
+                    quantity: products.fries.quantity,
+                    price: products.fries.price
+                });
+            }
+
+            const order = {
+                customer_name: customerName,
+                phone: phone,
+                address: address,
+                comment: comment || "Жок",
+                items: items,
+                total: total
+            };
+
+            // Маалыматты Telegram ботко жөнөтөбүз
+            telegramApp.sendData(JSON.stringify(order));
+
+            telegramApp.showAlert(
+                "Заказыңыз жөнөтүлдү!"
+            );
+        }
+
+        // Three.js сахнасын түзөбүз
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            1,
+            0.1,
+            100
+        );
+
+        camera.position.set(0, 1, 5);
+
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        });
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(500, 330);
+
+        document.getElementById("scene").appendChild(
+            renderer.domElement
+        );
+
+        // Жарыктар
+        const mainLight = new THREE.DirectionalLight(
+            0xffffff,
+            3
+        );
+
+        mainLight.position.set(2, 4, 5);
+        scene.add(mainLight);
+
+        const ambientLight = new THREE.AmbientLight(
+            0xffffff,
+            1.5
+        );
+
+        scene.add(ambientLight);
+
+        // Убактылуу 3D бургерди түзөбүз
+        // Кийин мунун ордуна .glb модель коёбуз
+        const burger = new THREE.Group();
+
+        const bunMaterial = new THREE.MeshStandardMaterial({
+            color: 0xd9822b,
+            roughness: 0.7
+        });
+
+        const meatMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4b160c,
+            roughness: 0.9
+        });
+
+        const cheeseMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffc928,
+            roughness: 0.5
+        });
+
+        const bottomBun = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.25, 1.35, 0.35, 48),
+            bunMaterial
+        );
+
+        bottomBun.position.y = -0.8;
+        burger.add(bottomBun);
+
+        const meat = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.2, 1.2, 0.42, 48),
+            meatMaterial
+        );
+
+        meat.position.y = -0.4;
+        burger.add(meat);
+
+        const cheese = new THREE.Mesh(
+            new THREE.BoxGeometry(2.25, 0.12, 2.25),
+            cheeseMaterial
+        );
+
+        cheese.rotation.y = Math.PI / 4;
+        cheese.position.y = -0.05;
+        burger.add(cheese);
+
+        const topBun = new THREE.Mesh(
+            new THREE.SphereGeometry(
+                1.3,
+                48,
+                24,
+                0,
+                Math.PI * 2,
+                0,
+                Math.PI / 2
+            ),
+            bunMaterial
+        );
+
+        topBun.position.y = 0.35;
+        burger.add(topBun);
+
+        scene.add(burger);
+
+        // Бургердин кыймылы
+        function animate() {
+            requestAnimationFrame(animate);
+
+            burger.rotation.y += 0.01;
+            burger.position.y = Math.sin(Date.now() * 0.002) * 0.12;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Экрандын өлчөмү өзгөргөндө Canvas'ты тууралайбыз
+        function resizeScene() {
+            const sceneElement = document.getElementById("scene");
+            const width = sceneElement.clientWidth;
+            const height = sceneElement.clientHeight;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(width, height);
+        }
+
+        window.addEventListener("resize", resizeScene);
+        resizeScene();
+    </script>
+</body>
+</html>
